@@ -17,15 +17,21 @@
 	const API_BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000').replace(/\/$/, '');
 
 	const roleInfo = {
-		Personal Monitoring: { title: "Personal Monitoring", subtitle: 'Self-check symptoms & get guidance', icon: '👤', name: 'Hello!', accent: '#0f8b8d' },
-		asha: { title: "I'm an ASHA Worker", subtitle: 'Screen, educate & support your community', icon: '🧑🏽‍⚕️', name: 'Hello, Sunita', accent: '#d6536d' },
-		anm: { title: "I'm an ANM Worker", subtitle: 'Advanced assessment, referrals & reporting', icon: '👩🏽‍⚕️', name: 'Hello, Dr. Priya', accent: '#356fd6' }
-	};
+        "Personal Monitoring": { title: "Personal Monitoring", subtitle: 'Self-check symptoms & get guidance', icon: '👤', name: 'Hello!', accent: '#0f8b8d' },
+        asha: { title: "I'm an ASHA Worker", subtitle: 'Screen, educate & support your community', icon: '🧑🏽‍⚕️', name: 'Hello, Sunita', accent: '#d6536d' },
+        anm: { title: "I'm an ANM Worker", subtitle: 'Advanced assessment, referrals & reporting', icon: '👩🏽‍⚕️', name: 'Hello, Dr. Priya', accent: '#356fd6' }
+};
 
 	const symptomOptions = [
-		['🤒', 'Fever'], ['🤧', 'Cough'], ['🫁', 'Breathing Problem'], ['❤️', 'Chest Pain'],
-		['⚡', 'Weakness'], ['🧠', 'Headache'], ['💧', 'Diarrhea'], ['➕', 'Others']
-	];
+        ['🤒', 'Fever'],
+        ['🤧', 'Cough'],
+        ['🫁', 'Breathing Problem'],
+        ['❤️', 'Chest Pain'],
+        ['⚡', 'Weakness'],
+        ['🧠', 'Headache'],
+        ['💧', 'Diarrhea'],
+        ['➕', 'Others']
+];
 
 	const cases = [
 		{ name: 'Ramesh Kumar', time: '2 min ago', status: 'High priority' },
@@ -112,7 +118,7 @@
 
 	let resultDecision = 'Low Priority';
 	let resultResponse = '';
-	$: current = role ? roleInfo[role] : roleInfo.Personal Monitoring;
+	$: current = role ? roleInfo[role] : roleInfo["Personal Monitoring"];
 </script>
 
 <svelte:head><title>MedNexus | Triage Severity Identification System</title><meta name="theme-color" content="#071621" /></svelte:head>

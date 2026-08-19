@@ -1,0 +1,10 @@
+﻿Flask
+pandas
+numpy
+requests
+beautifulsoup4
+scikit-learn
+openpyxl
+python-dotenv
+SQLAlchemy
+psycopg2-binary
