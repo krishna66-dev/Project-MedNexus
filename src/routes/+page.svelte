@@ -1,5 +1,5 @@
 <script lang="ts">
-	type Role = 'individual' | 'asha' | 'anm';
+	type Role = 'Personal Monitoring' | 'asha' | 'anm';
 	type View = 'welcome' | 'dashboard' | 'screening' | 'result' | 'learn' | 'reports' | 'emergency' | 'profile' | 'pain';
 
 	let role: Role | null = null;
@@ -17,7 +17,7 @@
 	const API_BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000').replace(/\/$/, '');
 
 	const roleInfo = {
-		individual: { title: "I'm an Individual", subtitle: 'Self-check symptoms & get guidance', icon: '👤', name: 'Hello!', accent: '#0f8b8d' },
+		Personal Monitoring: { title: "Personal Monitoring", subtitle: 'Self-check symptoms & get guidance', icon: '👤', name: 'Hello!', accent: '#0f8b8d' },
 		asha: { title: "I'm an ASHA Worker", subtitle: 'Screen, educate & support your community', icon: '🧑🏽‍⚕️', name: 'Hello, Sunita', accent: '#d6536d' },
 		anm: { title: "I'm an ANM Worker", subtitle: 'Advanced assessment, referrals & reporting', icon: '👩🏽‍⚕️', name: 'Hello, Dr. Priya', accent: '#356fd6' }
 	};
@@ -34,7 +34,7 @@
 	];
 
 	function chooseRole(next: Role) { role = next; }
-	function start() { if (!role) role = 'individual'; errorMessage = ''; view = 'dashboard'; }
+	function start() { if (!role) role = 'Personal Monitoring'; errorMessage = ''; view = 'dashboard'; }
 	function toggleSymptom(name: string) {
 		const next = new Set(symptoms);
 		next.has(name) ? next.delete(name) : next.add(name);
@@ -112,7 +112,7 @@
 
 	let resultDecision = 'Low Priority';
 	let resultResponse = '';
-	$: current = role ? roleInfo[role] : roleInfo.individual;
+	$: current = role ? roleInfo[role] : roleInfo.Personal Monitoring;
 </script>
 
 <svelte:head><title>MedNexus | Triage Severity Identification System</title><meta name="theme-color" content="#071621" /></svelte:head>
@@ -147,23 +147,23 @@
 		</main>
 	{:else if view === 'dashboard'}
 		<main class="page dashboard">
-			<section class="welcome-row"><div><p class="eyebrow">{role === 'individual' ? 'YOUR HEALTH COMPANION' : 'COMMUNITY HEALTH DASHBOARD'}</p><h1>{current.name}</h1><p>{role === 'individual' ? 'How can we help you today?' : current.title.replace("I'm an ", '')}</p></div><div class="profile-orb">{current.icon}</div></section>
-			{#if role !== 'individual'}
+			<section class="welcome-row"><div><p class="eyebrow">{role === 'Personal Monitoring' ? 'YOUR HEALTH COMPANION' : 'COMMUNITY HEALTH DASHBOARD'}</p><h1>{current.name}</h1><p>{role === 'Personal Monitoring' ? 'How can we help you today?' : current.title.replace("I'm an ", '')}</p></div><div class="profile-orb">{current.icon}</div></section>
+			{#if role !== 'Personal Monitoring'}
 				<section class="stats"><div><b>23</b><span>People screened</span></div><div><b class="danger">7</b><span>High priority</span></div><div><b class="warning">3</b><span>Referred today</span></div></section>
 			{/if}
 			<section><div class="section-title"><h2>Quick Actions</h2><button on:click={() => go('screening')}>Start screening →</button></div><div class="action-grid">
-				<button on:click={() => go('screening')}><span>🩺</span><b>{role === 'individual' ? 'Check Symptoms' : 'Patient Screening'}</b><small>Assess symptoms safely</small></button>
+				<button on:click={() => go('screening')}><span>🩺</span><b>{role === 'Personal Monitoring' ? 'Check Symptoms' : 'Patient Screening'}</b><small>Assess symptoms safely</small></button>
 				<button on:click={() => go('learn')}><span>📚</span><b>Health Education</b><small>Learn & share guidance</small></button>
 				<button on:click={() => go('reports')}><span>📊</span><b>Reports</b><small>View local health data</small></button>
 				<button class="emergency-action" on:click={() => go('emergency')}><span>🆘</span><b>Emergency</b><small>Quick help & referral</small></button>
 			</div></section>
-			{#if role !== 'individual'}<section class="recent"><div class="section-title"><h2>Recent Screenings</h2><button on:click={() => go('reports')}>View all</button></div>{#each cases as c}<article><span class="person">👤</span><div><b>{c.name}</b><small class:high={c.status === 'High priority'} class:medium-status={c.status === 'Medium priority'} class:low-status={c.status === 'Low priority'}><i class="status-light"></i>{c.status}</small></div><time>{c.time}</time></article>{/each}</section>{/if}
+			{#if role !== 'Personal Monitoring'}<section class="recent"><div class="section-title"><h2>Recent Screenings</h2><button on:click={() => go('reports')}>View all</button></div>{#each cases as c}<article><span class="person">👤</span><div><b>{c.name}</b><small class:high={c.status === 'High priority'} class:medium-status={c.status === 'Medium priority'} class:low-status={c.status === 'Low priority'}><i class="status-light"></i>{c.status}</small></div><time>{c.time}</time></article>{/each}</section>{/if}
 		</main>
 	{:else if view === 'screening'}
 		<main class="page screening">
 			{#if errorMessage}<div class="error-banner">{errorMessage}</div>{/if}
 			<button class="back" on:click={() => go('dashboard')}>← Back</button><div class="progress"><span style={`width:${step * 20}%`}></span></div><small>Step {step} of 5</small>
-			<h1>{role === 'individual' ? 'What are you feeling?' : 'What is the main concern?'}</h1><p>Select all symptoms that apply. This information helps determine the appropriate next step.</p>
+			<h1>{role === 'Personal Monitoring' ? 'What are you feeling?' : 'What is the main concern?'}</h1><p>Select all symptoms that apply. This information helps determine the appropriate next step.</p>
 			<label class="input-label">Patient name<input bind:value={patientName} placeholder="Enter patient name" /></label><label class="input-label">Date of birth<input type="date" bind:value={patientDob} /></label>
 			<div class="symptoms">{#each symptomOptions as item}<button class:selected={symptoms.has(item[1])} on:click={() => toggleSymptom(item[1])}><span>{item[0]}</span>{item[1]}<i>{symptoms.has(item[1]) ? '✓' : '+'}</i></button>{/each}</div>
 			<textarea class="notes" bind:value={notes} placeholder="Optional notes about duration, severity, or anything else..."></textarea><button class="primary large" disabled={symptoms.size === 0 || loading} on:click={analyzeSymptoms}>{loading ? 'Analyzing...' : 'Analyze Symptoms →'}</button>
@@ -185,7 +185,7 @@
 	{:else if view === 'emergency'}
 		<main class="page emergency"><button class="back light" on:click={() => go('dashboard')}>← Back</button><p class="eyebrow light-text">EMERGENCY ASSISTANCE</p><h1>Need urgent help?</h1><p>Use emergency services for severe or life-threatening symptoms.</p><button class="sos" on:click={() => saved = true}>SOS</button>{#if saved}<p class="emergency-note">Emergency alert initiated. Contact your local emergency service immediately.</p>{/if}<section class="emergency-contacts"><h2>Quick contacts</h2><button><span>☎</span><div><b>112</b><small>National emergency response</small></div><i>Call →</i></button><button><span>🏥</span><div><b>Nearest PHC / Hospital</b><small>Find the closest care centre</small></div><i>→</i></button><button><span>📞</span><div><b>Health helpline</b><small>Get official health assistance</small></div><i>→</i></button></section></main>
 	{:else if view === 'profile'}
-		<main class="page profile"><button class="back" on:click={() => go('dashboard')}>← Back</button><div class="profile-head"><div class="big-avatar">{current.icon}</div><h1>{role === 'individual' ? 'Krishna' : role === 'asha' ? 'Sunita Devi' : 'Dr. Priya Singh'}</h1><p>{role === 'individual' ? 'MedNexus user' : current.title.replace("I'm an ", '')} · ID: MN-8214345</p></div><section class="menu">{#each ['Personal Information','My Activity','Training & Certificates','Language & Accessibility','Settings','Help & Support'] as m}<button><span>{m === 'Settings' ? '⚙' : m === 'Help & Support' ? '?' : '◈'}</span>{m}<i>›</i></button>{/each}<button class="logout" on:click={() => { role = null; go('welcome'); }}>↪ Sign out</button></section></main>
+		<main class="page profile"><button class="back" on:click={() => go('dashboard')}>← Back</button><div class="profile-head"><div class="big-avatar">{current.icon}</div><h1>{role === 'Personal Monitoring' ? 'Krishna' : role === 'asha' ? 'Sunita Devi' : 'Dr. Priya Singh'}</h1><p>{role === 'Personal Monitoring' ? 'MedNexus user' : current.title.replace("I'm an ", '')} · ID: MN-8214345</p></div><section class="menu">{#each ['Personal Information','My Activity','Training & Certificates','Language & Accessibility','Settings','Help & Support'] as m}<button><span>{m === 'Settings' ? '⚙' : m === 'Help & Support' ? '?' : '◈'}</span>{m}<i>›</i></button>{/each}<button class="logout" on:click={() => { role = null; go('welcome'); }}>↪ Sign out</button></section></main>
 	{/if}
 
 	{#if view !== 'welcome' && view !== 'screening' && view !== 'result' && view !== 'emergency'}
