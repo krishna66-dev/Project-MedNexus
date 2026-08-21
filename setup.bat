@@ -1,91 +1,125 @@
 @echo off
 setlocal
-title MedNexus - First Time Setup
+
+title MedNexus Setup
+
+cd /d "%~dp0"
 
 echo ==========================================
-echo        MedNexus - First Time Setup
+echo        MedNexus - Project Setup
 echo ==========================================
 echo.
 
-echo [1/5] Checking Python 3.12...
-py -3.12 --version >nul 2>&1
+REM ------------------------------------------
+REM Check Python
+REM ------------------------------------------
+echo [1/4] Checking Python...
+
+where py >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: Python 3.12 was not found.
-    echo Install Python 3.12 and try again.
+    echo ERROR: Python is not installed.
+    echo Please install Python 3.12 or newer.
     pause
     exit /b 1
 )
-py -3.12 --version
+
+py --version
 echo.
 
-echo [2/5] Checking Node.js and npm...
-node --version >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: Node.js was not found.
-    echo Install Node.js LTS and try again.
-    pause
-    exit /b 1
-)
-npm --version >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: npm was not found.
-    echo Install Node.js LTS and try again.
-    pause
-    exit /b 1
-)
-node --version
-npm --version
-echo.
+REM ------------------------------------------
+REM Create Python virtual environment
+REM ------------------------------------------
+echo [2/4] Setting up Python virtual environment...
 
-echo [3/5] Creating Python virtual environment...
 if not exist "backend\venv\Scripts\python.exe" (
-    py -3.12 -m venv "backend\venv"
+    echo Creating backend virtual environment...
+
+    py -3.12 -m venv backend\venv
+
     if errorlevel 1 (
-        echo ERROR: Could not create the Python virtual environment.
-        pause
-        exit /b 1
+        echo Python 3.12 was not found.
+        echo Trying the default Python installation...
+        py -m venv backend\venv
     )
 ) else (
-    echo Existing backend\venv found - keeping it.
+    echo Existing virtual environment found.
 )
+
 echo.
 
-echo [4/5] Installing Python dependencies...
-call "backend\venv\Scripts\python.exe" -m pip install --upgrade pip
+REM ------------------------------------------
+REM Install backend dependencies
+REM ------------------------------------------
+echo Installing backend dependencies...
+
+backend\venv\Scripts\python.exe -m pip install --upgrade pip
+
 if errorlevel 1 (
     echo ERROR: Could not upgrade pip.
     pause
     exit /b 1
 )
-call "backend\venv\Scripts\python.exe" -m pip install -r "backend\requirements.txt"
+
+backend\venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+
 if errorlevel 1 (
-    echo ERROR: Could not install backend dependencies.
+    echo ERROR: Backend dependencies could not be installed.
     pause
     exit /b 1
 )
+
 echo.
 
-echo [5/5] Installing frontend dependencies...
-pushd "frontend"
-call npm install
-set "NPM_EXIT=%errorlevel%"
-popd
-if not "%NPM_EXIT%"=="0" (
-    echo ERROR: npm install failed.
+REM ------------------------------------------
+REM Check Node.js
+REM ------------------------------------------
+echo [3/4] Checking Node.js...
+
+where node >nul 2>&1
+if errorlevel 1 (
+    echo ERROR: Node.js is not installed.
+    echo Please install Node.js LTS.
     pause
-    exit /b %NPM_EXIT%
+    exit /b 1
 )
 
+node --version
+npm --version
+echo.
+
+REM ------------------------------------------
+REM Install frontend dependencies
+REM ------------------------------------------
+echo [4/4] Installing frontend dependencies...
+
+cd /d "%~dp0frontend"
+
+if not exist "node_modules" (
+    echo Installing npm packages...
+    npm install
+) else (
+    echo node_modules already exists.
+    echo Checking npm packages...
+    npm install
+)
+
+if errorlevel 1 (
+    echo ERROR: Frontend dependencies could not be installed.
+    pause
+    exit /b 1
+)
+
+cd /d "%~dp0"
+
 echo.
 echo ==========================================
-echo        MedNexus setup complete!
+echo       MedNexus Setup Complete!
 echo ==========================================
 echo.
-echo PostgreSQL must be installed and running.
-echo The database/user in backend\.env must exist.
-echo If needed, use backend\schema.sql to create the tables.
+echo You can now run:
 echo.
-echo Next time, run start.bat.
+echo     start.bat
+echo.
+echo This will start both the backend and frontend.
 echo.
 pause
-endlocal

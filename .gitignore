@@ -33,3 +33,16 @@ Thumbs.db
 npm-debug.log*
 
 .svelte-kit/
+
+# Python virtual environment
+backend/venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Node dependencies
+frontend/node_modules/
+
+# Environment files
+# backend/.env
