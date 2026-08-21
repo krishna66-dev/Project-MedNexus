@@ -1,0 +1,48 @@
+@use 'variables' as v;
+
+@mixin card {
+  background: v.$color-surface;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-lg;
+  box-shadow: v.$shadow-card;
+}
+
+@mixin tricolour-strip($height: 4px) {
+  height: $height;
+  background: linear-gradient(
+    to right,
+    v.$color-saffron 0%, v.$color-saffron 33.3%,
+    v.$color-white 33.3%, v.$color-white 66.6%,
+    v.$color-green 66.6%, v.$color-green 100%
+  );
+}
+
+@mixin btn-base {
+  font-family: v.$font-family-base;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: v.$radius-md;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.05s ease, box-shadow .15s ease;
+  &:active { transform: translateY(1px); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+@mixin focus-ring {
+  outline: none;
+  &:focus-visible {
+    outline: 3px solid rgba(11, 78, 162, 0.45);
+    outline-offset: 2px;
+  }
+}
+
+@mixin container {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 v.$space-5;
+  @media (max-width: v.$bp-md) {
+    padding: 0 v.$space-4;
+  }
+}

@@ -1,0 +1,293 @@
+"""
+MedNexus Triage Engine
+-----------------------
+A transparent, rule-based Early Warning Score (EWS) adapted from widely used
+clinical scoring frameworks (in the spirit of NEWS2 / MEWS) for use by
+community health workers (ASHA/ANM) and individuals for PERSONAL MONITORING.
+
+IMPORTANT: This is a decision-support aid only. It does NOT diagnose disease
+and does NOT replace clinical judgement, a doctor, or emergency services.
+Every result carries a clear disclaimer and a recommendation to escalate to
+a PHC/CHC/hospital or call 108 (national ambulance) when severity is high.
+
+Scoring approach
+-----------------
+Each vital parameter is scored 0-3 based on how far it deviates from a normal
+adult range. Points are summed into a total score, which maps to one of four
+triage bands:
+
+    GREEN  (0-2)   -> Stable / routine monitoring
+    YELLOW (3-5)   -> Monitor closely / consider PHC visit
+    ORANGE (6-8)   -> Needs prompt medical attention (CHC/hospital)
+    RED    (9+)    -> Emergency - seek immediate care / call 108
+
+Any single "red-flag" symptom or a critically abnormal vital escalates the
+band directly regardless of the numeric total (a safety net so no dangerous
+single value gets diluted by otherwise-normal readings).
+"""
+
+from typing import Optional, List, Dict, Any
+
+# Symptom codes considered "red flag" -> force at least ORANGE (or RED for the worst)
+RED_FLAG_SYMPTOMS = {
+    "chest_pain": "red",
+    "severe_breathlessness": "red",
+    "unconscious": "red",
+    "seizure": "red",
+    "severe_bleeding": "red",
+    "blue_lips_face": "red",
+    "stroke_signs": "red",          # facial droop / slurred speech / limb weakness
+    "severe_dehydration": "orange",
+    "high_fever_with_rash": "orange",
+    "persistent_vomiting": "orange",
+    "severe_abdominal_pain": "orange",
+}
+
+SYMPTOM_LABELS = {
+    "fever": {"en": "Fever", "hi": "\u092c\u0941\u0916\u093e\u0930"},
+    "cough": {"en": "Cough", "hi": "\u0916\u093e\u0902\u0938\u0940"},
+    "breathlessness": {"en": "Breathlessness", "hi": "\u0938\u093e\u0902\u0938 \u092b\u0942\u0932\u0928\u093e"},
+    "severe_breathlessness": {"en": "Severe breathlessness", "hi": "\u0917\u0902\u092d\u0940\u0930 \u0938\u093e\u0902\u0938 \u0932\u0947\u0928\u0947 \u092e\u0947\u0902 \u0915\u0920\u093f\u0928\u093e\u0908"},
+    "chest_pain": {"en": "Chest pain", "hi": "\u0938\u0940\u0928\u0947 \u092e\u0947\u0902 \u0926\u0930\u094d\u0926"},
+    "headache": {"en": "Headache", "hi": "\u0938\u093f\u0930\u0926\u0930\u094d\u0926"},
+    "body_ache": {"en": "Body ache", "hi": "\u0936\u0930\u0940\u0930 \u092e\u0947\u0902 \u0926\u0930\u094d\u0926"},
+    "diarrhea": {"en": "Diarrhea", "hi": "\u0926\u0938\u094d\u0924"},
+    "vomiting": {"en": "Vomiting", "hi": "\u0909\u0932\u094d\u091f\u0940"},
+    "persistent_vomiting": {"en": "Persistent vomiting", "hi": "\u0932\u0917\u093e\u0924\u093e\u0930 \u0909\u0932\u094d\u091f\u0940"},
+    "dizziness": {"en": "Dizziness", "hi": "\u091a\u0915\u094d\u0915\u0930 \u0906\u0928\u093e"},
+    "fatigue": {"en": "Fatigue / weakness", "hi": "\u0925\u0915\u093e\u0928/\u0915\u092e\u095b\u094b\u0930\u0940"},
+    "severe_abdominal_pain": {"en": "Severe abdominal pain", "hi": "\u092a\u0947\u091f \u092e\u0947\u0902 \u0917\u0902\u092d\u0940\u0930 \u0926\u0930\u094d\u0926"},
+    "severe_dehydration": {"en": "Signs of severe dehydration", "hi": "\u0917\u0902\u092d\u0940\u0930 \u091c\u0932\u0940\u092f \u0915\u092e\u0940 \u0915\u0947 \u0932\u0915\u094d\u0937\u0923"},
+    "unconscious": {"en": "Unconsciousness / unresponsive", "hi": "\u092c\u0947\u0939\u094b\u0936\u0940 / \u0905\u092a\u094d\u0930\u0924\u093f\u0915\u094d\u0930\u093f\u092f\u0936\u0940\u0932\u0924\u093e"},
+    "seizure": {"en": "Seizure / convulsions", "hi": "\u0926\u094c\u0930\u093e / \u092e\u093f\u0930\u0917\u0940"},
+    "severe_bleeding": {"en": "Severe bleeding", "hi": "\u0917\u0902\u092d\u0940\u0930 \u0930\u0915\u094d\u0924\u0938\u094d\u0930\u093e\u0935"},
+    "blue_lips_face": {"en": "Bluish lips or face", "hi": "\u0939\u094b\u0902\u0920 \u092f\u093e \u091a\u0947\u0939\u0930\u0947 \u0915\u093e \u0928\u0940\u0932\u093e \u092a\u0921\u093c\u0928\u093e"},
+    "stroke_signs": {"en": "Facial droop / slurred speech / limb weakness", "hi": "\u091a\u0947\u0939\u0930\u0947 \u0915\u093e \u091d\u0941\u0915\u0928\u093e / \u0932\u0921\u093c\u0916\u0921\u093c\u093e\u0924\u0940 \u092c\u094b\u0932\u0940 / \u0905\u0902\u0917 \u0915\u092e\u095b\u094b\u0930\u0940"},
+    "high_fever_with_rash": {"en": "High fever with skin rash", "hi": "\u0924\u0947\u091c \u092c\u0941\u0916\u093e\u0930 \u0915\u0947 \u0938\u093e\u0925 \u0924\u094d\u0935\u091a\u093e \u092a\u0930 \u091a\u0915\u0924\u094d\u0924\u0947"},
+    "loss_of_appetite": {"en": "Loss of appetite", "hi": "\u092d\u0942\u0916 \u0928 \u0932\u0917\u0928\u093e"},
+    "swelling": {"en": "Swelling (limbs/face)", "hi": "\u0938\u0942\u091c\u0928"},
+    "urination_issues": {"en": "Urination problems", "hi": "\u092a\u0947\u0936\u093e\u092c \u0938\u0902\u092c\u0902\u0927\u0940 \u0938\u092e\u0938\u094d\u092f\u093e"},
+}
+
+
+def _score_systolic_bp(v: Optional[int]) -> (int, Optional[str]):
+    if v is None:
+        return 0, None
+    if v < 70:
+        return 3, "Systolic BP critically low"
+    if v < 90:
+        return 3, "Systolic BP very low (possible shock)"
+    if v < 100:
+        return 1, "Systolic BP low"
+    if v <= 139:
+        return 0, None
+    if v <= 159:
+        return 1, "Systolic BP mildly elevated"
+    if v <= 179:
+        return 2, "Systolic BP high"
+    return 3, "Systolic BP critically high (hypertensive crisis range)"
+
+
+def _score_diastolic_bp(v: Optional[int]) -> (int, Optional[str]):
+    if v is None:
+        return 0, None
+    if v < 60:
+        return 1, "Diastolic BP low"
+    if v <= 89:
+        return 0, None
+    if v <= 99:
+        return 1, "Diastolic BP mildly elevated"
+    if v <= 109:
+        return 2, "Diastolic BP high"
+    return 3, "Diastolic BP critically high"
+
+
+def _score_heart_rate(v: Optional[int]) -> (int, Optional[str]):
+    if v is None:
+        return 0, None
+    if v < 40:
+        return 3, "Heart rate critically low"
+    if v < 50:
+        return 1, "Heart rate low"
+    if v <= 100:
+        return 0, None
+    if v <= 110:
+        return 1, "Heart rate mildly elevated"
+    if v <= 130:
+        return 2, "Heart rate high"
+    return 3, "Heart rate critically high"
+
+
+def _score_respiratory_rate(v: Optional[int]) -> (int, Optional[str]):
+    if v is None:
+        return 0, None
+    if v < 9:
+        return 3, "Respiratory rate critically low"
+    if v <= 11:
+        return 1, "Respiratory rate low"
+    if v <= 20:
+        return 0, None
+    if v <= 24:
+        return 2, "Respiratory rate high"
+    return 3, "Respiratory rate critically high"
+
+
+def _score_temperature(v: Optional[float]) -> (int, Optional[str]):
+    if v is None:
+        return 0, None
+    if v < 35.0:
+        return 3, "Hypothermia (very low body temperature)"
+    if v <= 37.5:
+        return 0, None
+    if v <= 38.5:
+        return 1, "Mild fever"
+    if v <= 39.5:
+        return 2, "High fever"
+    return 3, "Very high fever"
+
+
+def _score_spo2(v: Optional[int]) -> (int, Optional[str]):
+    if v is None:
+        return 0, None
+    if v >= 95:
+        return 0, None
+    if v >= 92:
+        return 2, "SpO2 mildly low"
+    return 3, "SpO2 critically low (hypoxia)"
+
+
+def _score_blood_sugar(v: Optional[float], test_type: Optional[str]) -> (int, Optional[str]):
+    if v is None:
+        return 0, None
+    test_type = (test_type or "random").lower()
+    if test_type == "fasting":
+        if v < 54:
+            return 3, "Severe hypoglycemia (fasting)"
+        if v < 70:
+            return 2, "Low fasting blood sugar"
+        if v <= 100:
+            return 0, None
+        if v <= 125:
+            return 1, "Fasting sugar in pre-diabetic range"
+        if v <= 180:
+            return 2, "Fasting sugar high"
+        return 3, "Fasting sugar critically high"
+    else:  # random / postprandial
+        if v < 54:
+            return 3, "Severe hypoglycemia"
+        if v < 70:
+            return 2, "Low blood sugar"
+        if v <= 140:
+            return 0, None
+        if v <= 199:
+            return 1, "Blood sugar mildly elevated"
+        if v <= 300:
+            return 2, "Blood sugar high"
+        return 3, "Blood sugar critically high"
+
+
+def _score_consciousness(v: Optional[str]) -> (int, Optional[str]):
+    if not v:
+        return 0, None
+    v = v.upper()
+    mapping = {"A": (0, None), "V": (2, "Responds only to voice"),
+               "P": (3, "Responds only to pain"), "U": (3, "Unresponsive")}
+    return mapping.get(v, (0, None))
+
+
+def _band_from_score(score: int) -> str:
+    if score >= 9:
+        return "red"
+    if score >= 6:
+        return "orange"
+    if score >= 3:
+        return "yellow"
+    return "green"
+
+
+_BAND_RANK = {"green": 0, "yellow": 1, "orange": 2, "red": 3}
+
+_BAND_LABEL = {
+    "green": {"en": "Stable", "hi": "\u0938\u094d\u0925\u093f\u0930"},
+    "yellow": {"en": "Monitor Closely", "hi": "\u0928\u093f\u0917\u0930\u093e\u0928\u0940 \u0938\u0947 \u0928\u093f\u0917\u0930\u093e\u0928\u0940 \u0930\u0916\u0947\u0902"},
+    "orange": {"en": "Needs Prompt Medical Attention", "hi": "\u0924\u0941\u0930\u0902\u0924 \u091a\u093f\u0915\u093f\u0924\u094d\u0938\u0915\u0940\u092f \u0927\u094d\u092f\u093e\u0928 \u0906\u0935\u0936\u094d\u092f\u0915"},
+    "red": {"en": "Emergency - Seek Immediate Care", "hi": "\u0906\u092a\u093e\u0924\u0915\u093e\u0932 - \u0924\u0941\u0930\u0902\u0924 \u0938\u0939\u093e\u092f\u0924\u093e \u0932\u0947\u0902"},
+}
+
+_BAND_RECOMMENDATION = {
+    "green": {
+        "en": "Vitals appear within a normal range. Continue routine self-monitoring and healthy habits. Recheck if symptoms change.",
+        "hi": "\u092e\u0939\u0924\u094d\u0935\u092a\u0942\u0930\u094d\u0923 \u0938\u0902\u0915\u0947\u0924 \u0938\u093e\u092e\u093e\u0928\u094d\u092f \u0938\u0940\u092e\u093e \u092e\u0947\u0902 \u0939\u0948\u0902\u0964 \u0928\u093f\u092f\u092e\u093f\u0924 \u0938\u094d\u0935-\u0928\u093f\u0917\u0930\u093e\u0928\u0940 \u091c\u093e\u0930\u0940 \u0930\u0916\u0947\u0902\u0964 \u0932\u0915\u094d\u0937\u0923 \u092c\u0926\u0932\u0928\u0947 \u092a\u0930 \u092a\u0941\u0928: \u091c\u093e\u0902\u091a \u0915\u0930\u0947\u0902\u0964",
+    },
+    "yellow": {
+        "en": "Some readings are outside normal range. Monitor closely over the next few hours and consider visiting the nearest PHC/Sub-Centre if symptoms persist or worsen.",
+        "hi": "\u0915\u0941\u091b \u0930\u0940\u0921\u093f\u0902\u0917 \u0938\u093e\u092e\u093e\u0928\u094d\u092f \u0938\u0940\u092e\u093e \u0938\u0947 \u092c\u093e\u0939\u0930 \u0939\u0948\u0902\u0964 \u0905\u0917\u0932\u0947 \u0915\u0941\u091b \u0918\u0902\u091f\u094b\u0902 \u0924\u0915 \u0928\u093f\u0917\u0930\u093e\u0928\u0940 \u0938\u0947 \u0928\u093f\u0917\u0930\u093e\u0928\u0940 \u0930\u0916\u0947\u0902 \u0914\u0930 \u092f\u0926\u093f \u0932\u0915\u094d\u0937\u0923 \u092c\u0928\u0947 \u0930\u0939\u0947\u0902 \u092f\u093e \u092c\u0922\u093c\u0947\u0902 \u0924\u094b \u0928\u091c\u0926\u0940\u0915\u0940 PHC/\u0909\u092a-\u0915\u0947\u0902\u0926\u094d\u0930 \u091c\u093e\u090f\u0902\u0964",
+    },
+    "orange": {
+        "en": "Readings indicate a concerning condition. Please visit the nearest CHC/hospital for medical evaluation as soon as possible.",
+        "hi": "\u0930\u0940\u0921\u093f\u0902\u0917 \u091a\u093f\u0902\u0924\u093e\u091c\u0928\u0915 \u0938\u094d\u0925\u093f\u0924\u093f \u0915\u093e \u0938\u0902\u0915\u0947\u0924 \u0926\u0947\u0924\u0940 \u0939\u0948\u0902\u0964 \u0915\u0943\u092a\u092f\u093e \u091c\u0932\u094d\u0926 \u0938\u0947 \u091c\u0932\u094d\u0926 \u0928\u091c\u0926\u0940\u0915\u0940 CHC/\u0905\u0938\u094d\u092a\u0924\u093e\u0932 \u091c\u093e\u0915\u0930 \u091c\u093e\u0902\u091a \u0915\u0930\u093e\u090f\u0902\u0964",
+    },
+    "red": {
+        "en": "This may be a medical emergency. Seek immediate care - go to the nearest hospital or call 108 (national ambulance) right away.",
+        "hi": "\u092f\u0939 \u090f\u0915 \u091a\u093f\u0915\u093f\u0924\u094d\u0938\u093e \u0906\u092a\u093e\u0924\u0915\u093e\u0932 \u0939\u094b \u0938\u0915\u0924\u093e \u0939\u0948\u0964 \u0924\u0941\u0930\u0902\u0924 \u0938\u0939\u093e\u092f\u0924\u093e \u0932\u0947\u0902 - \u0924\u0941\u0930\u0902\u0924 \u0928\u091c\u0926\u0940\u0915\u0940 \u0905\u0938\u094d\u092a\u0924\u093e\u0932 \u091c\u093e\u090f\u0902 \u092f\u093e 108 (\u0930\u093e\u0937\u094d\u091f\u094d\u0930\u0940\u092f \u090f\u0902\u092c\u0941\u0932\u0947\u0902\u0938) \u092a\u0930 \u0915\u0949\u0932 \u0915\u0930\u0947\u0902\u0964",
+    },
+}
+
+
+def compute_triage(payload: Dict[str, Any], lang: str = "en") -> Dict[str, Any]:
+    """
+    payload keys (all optional except at least one vital/symptom expected):
+        systolic_bp, diastolic_bp, heart_rate, respiratory_rate,
+        temperature_c, spo2, blood_sugar, sugar_test_type,
+        consciousness, symptoms (list[str])
+    Returns dict with severity_score, severity_level, severity_label,
+    recommendation, contributing_factors (list[str]).
+    """
+    lang = lang if lang in ("en", "hi") else "en"
+    total = 0
+    factors: List[str] = []
+
+    checks = [
+        (_score_systolic_bp, payload.get("systolic_bp")),
+        (_score_diastolic_bp, payload.get("diastolic_bp")),
+        (_score_heart_rate, payload.get("heart_rate")),
+        (_score_respiratory_rate, payload.get("respiratory_rate")),
+        (_score_temperature, payload.get("temperature_c")),
+        (_score_spo2, payload.get("spo2")),
+    ]
+    for fn, val in checks:
+        pts, reason = fn(val)
+        total += pts
+        if reason:
+            factors.append(reason)
+
+    sugar_pts, sugar_reason = _score_blood_sugar(payload.get("blood_sugar"), payload.get("sugar_test_type"))
+    total += sugar_pts
+    if sugar_reason:
+        factors.append(sugar_reason)
+
+    consc_pts, consc_reason = _score_consciousness(payload.get("consciousness"))
+    total += consc_pts
+    if consc_reason:
+        factors.append(consc_reason)
+
+    band = _band_from_score(total)
+
+    # Red-flag symptom override (safety net)
+    symptoms = payload.get("symptoms") or []
+    for code in symptoms:
+        forced = RED_FLAG_SYMPTOMS.get(code)
+        if forced and _BAND_RANK[forced] > _BAND_RANK[band]:
+            band = forced
+        if code in SYMPTOM_LABELS:
+            label = SYMPTOM_LABELS[code].get(lang, code)
+            if forced:
+                factors.append(f"{label} (red-flag symptom)" if lang == "en" else f"{label} (\u091a\u0947\u0924\u093e\u0935\u0928\u0940 \u0932\u0915\u094d\u0937\u0923)")
+
+    return {
+        "severity_score": total,
+        "severity_level": band,
+        "severity_label": _BAND_LABEL[band][lang],
+        "recommendation": _BAND_RECOMMENDATION[band][lang],
+        "contributing_factors": factors,
+    }
