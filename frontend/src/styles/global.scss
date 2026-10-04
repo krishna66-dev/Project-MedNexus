@@ -1,0 +1,142 @@
+@use 'variables' as v;
+@use 'mixins' as m;
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: v.$color-bg;
+  color: v.$color-text;
+  font-family: v.$font-family-base;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { min-height: 100vh; display: flex; flex-direction: column; }
+
+h1, h2, h3, h4 { font-family: v.$font-family-base; color: v.$color-navy-dark; margin: 0 0 v.$space-3; }
+p { line-height: 1.6; }
+a { color: v.$color-blue; text-decoration: none; &:hover { text-decoration: underline; } }
+
+.tricolour-strip { @include m.tricolour-strip; }
+
+.btn {
+  @include m.btn-base;
+  @include m.focus-ring;
+}
+.btn-primary {
+  @extend .btn;
+  background: v.$color-navy;
+  color: v.$color-white;
+  &:hover:not(:disabled) { background: v.$color-navy-dark; }
+}
+.btn-saffron {
+  @extend .btn;
+  background: v.$color-saffron;
+  color: v.$color-navy-dark;
+  &:hover:not(:disabled) { background: v.$color-saffron-dark; }
+}
+.btn-outline {
+  @extend .btn;
+  background: transparent;
+  color: v.$color-navy;
+  border: 1.5px solid v.$color-navy;
+  &:hover:not(:disabled) { background: v.$color-blue-light; }
+}
+.btn-danger {
+  @extend .btn;
+  background: v.$color-severity-red;
+  color: v.$color-white;
+  &:hover:not(:disabled) { background: darken(v.$color-severity-red, 8%); }
+}
+
+.card { @include m.card; padding: v.$space-5; }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-1;
+  margin-bottom: v.$space-4;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: v.$color-text-muted;
+  }
+
+  input, select, textarea {
+    @include m.focus-ring;
+    font-family: v.$font-family-base;
+    font-size: 1rem;
+    padding: 10px 12px;
+    border: 1.5px solid v.$color-border;
+    border-radius: v.$radius-sm;
+    background: v.$color-white;
+    color: v.$color-text;
+
+    &:focus { border-color: v.$color-blue; }
+  }
+
+  .hint { font-size: 0.78rem; color: v.$color-text-muted; }
+  .error { font-size: 0.8rem; color: v.$color-severity-red; font-weight: 600; }
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 v.$space-4;
+  @media (max-width: v.$bp-sm) { grid-template-columns: 1fr; }
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 v.$space-4;
+  @media (max-width: v.$bp-md) { grid-template-columns: 1fr 1fr; }
+  @media (max-width: v.$bp-sm) { grid-template-columns: 1fr; }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.badge-green  { background: rgba(30,142,62,.12);  color: v.$color-severity-green; }
+.badge-yellow { background: rgba(242,169,0,.15);  color: darken(v.$color-severity-yellow, 15%); }
+.badge-orange { background: rgba(232,89,12,.13);  color: v.$color-severity-orange; }
+.badge-red    { background: rgba(211,47,47,.13);  color: v.$color-severity-red; }
+
+.container { @include m.container; }
+
+.disclaimer {
+  font-size: 0.82rem;
+  color: v.$color-text-muted;
+  background: v.$color-blue-light;
+  border-left: 4px solid v.$color-blue;
+  padding: v.$space-3 v.$space-4;
+  border-radius: v.$radius-sm;
+}
+
+.gov-emblem-note {
+  font-size: 0.72rem;
+  color: v.$color-text-muted;
+  letter-spacing: 0.02em;
+}
+
+::selection { background: rgba(11,78,162,.2); }
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  background: v.$color-navy;
+  color: white;
+  padding: 8px 16px;
+  z-index: 999;
+  &:focus { left: 8px; top: 8px; }
+}
