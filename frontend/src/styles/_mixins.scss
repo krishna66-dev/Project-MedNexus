@@ -7,25 +7,22 @@
   box-shadow: v.$shadow-card;
 }
 
-@mixin tricolour-strip($height: 4px) {
-  height: $height;
-  background: linear-gradient(
-    to right,
-    v.$color-saffron 0%, v.$color-saffron 33.3%,
-    v.$color-white 33.3%, v.$color-white 66.6%,
-    v.$color-green 66.6%, v.$color-green 100%
-  );
-}
-
 @mixin btn-base {
   font-family: v.$font-family-base;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   border-radius: v.$radius-md;
-  padding: 10px 20px;
-  border: none;
+  padding: 11px 22px;
+  border: 1.5px solid transparent;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.05s ease, box-shadow .15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+  &:hover { text-decoration: none; }
   &:active { transform: translateY(1px); }
   &:disabled { opacity: 0.55; cursor: not-allowed; }
 }
@@ -33,13 +30,13 @@
 @mixin focus-ring {
   outline: none;
   &:focus-visible {
-    outline: 3px solid rgba(11, 78, 162, 0.45);
+    outline: 3px solid rgba(15, 124, 128, 0.35);
     outline-offset: 2px;
   }
 }
 
 @mixin container {
-  max-width: 1160px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 v.$space-5;
   @media (max-width: v.$bp-md) {

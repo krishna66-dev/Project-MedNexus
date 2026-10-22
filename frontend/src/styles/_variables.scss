@@ -1,34 +1,43 @@
-// MedNexus design tokens — inspired by Govt. of India digital service portals
-// (Ayushman Bharat / Digital India / eSanjeevani visual language)
+// MedNexus design tokens — "Healthcare UI Showcase" redesign
+// Calm teal / deep-navy palette with a green primary action colour.
 
-// Tricolour-derived palette
-$color-saffron:        #FF9933;
-$color-saffron-dark:    #E17F1C;
+// Brand
+$color-navy:            #0B3350;   // sidebar, footer, dark navbar
+$color-navy-dark:       #082841;
+$color-navy-text:       #0F2A43;   // headings
+$color-teal:            #0F7C80;   // primary UI accent
+$color-teal-dark:       #0B6569;
+$color-teal-light:      #E3F3F2;
+$color-green:           #0E9F6E;   // main call-to-action
+$color-green-dark:      #0B855B;
+$color-blue-link:       #0B7FA8;
 $color-white:           #FFFFFF;
-$color-green:           #138808;
-$color-green-dark:      #0E6706;
 
-// Primary govt-portal navy/blue (Ashoka Chakra blue family)
-$color-navy:            #0B3C6E;
-$color-navy-dark:       #082B4F;
-$color-blue:             #0B4EA2;
-$color-blue-light:      #E8F1FB;
+// Surfaces
+$color-bg:              #EEF5FA;
+$color-bg-soft:         #F6FAFD;
+$color-surface:         #FFFFFF;
+$color-border:          #DCE6EE;
+$color-border-strong:   #C4D3DF;
 
-// Severity band colours (triage)
+// Text
+$color-text:            #1B2B3A;
+$color-text-muted:      #62768A;
+$color-placeholder:     #9AAAB9;
+
+// Severity (triage) — kept 4-level to match the backend engine
 $color-severity-green:  #1E8E3E;
-$color-severity-yellow: #F2A900;
+$color-severity-yellow: #D9930D;
 $color-severity-orange: #E8590C;
 $color-severity-red:    #D32F2F;
 
-// Neutrals
-$color-bg:              #F4F6F9;
-$color-surface:         #FFFFFF;
-$color-border:          #D7DEE7;
-$color-text:            #1B2430;
-$color-text-muted:      #5B6B7C;
+$color-sev-green-bg:    #E5F6EC;
+$color-sev-yellow-bg:   #FFF3D9;
+$color-sev-orange-bg:   #FFE9DC;
+$color-sev-red-bg:      #FDE4E4;
 
-// Typography
-$font-family-base: 'Noto Sans', 'Noto Sans Devanagari', Arial, sans-serif;
+// Typography (Noto Sans keeps Devanagari rendering consistent)
+$font-family-base: 'Noto Sans', 'Noto Sans Devanagari', 'Segoe UI', Arial, sans-serif;
 
 // Spacing scale
 $space-1: 4px;
@@ -39,12 +48,17 @@ $space-5: 24px;
 $space-6: 32px;
 $space-7: 48px;
 
-// Radii & shadow
-$radius-sm: 4px;
-$radius-md: 8px;
-$radius-lg: 14px;
-$shadow-card: 0 1px 3px rgba(11, 34, 66, 0.08), 0 1px 2px rgba(11, 34, 66, 0.06);
-$shadow-elevated: 0 8px 24px rgba(11, 34, 66, 0.14);
+// Radii & shadows
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 18px;
+$radius-pill: 999px;
+$shadow-card: 0 1px 2px rgba(11, 51, 80, 0.05), 0 6px 20px rgba(11, 51, 80, 0.07);
+$shadow-elevated: 0 14px 40px rgba(11, 51, 80, 0.16);
+
+// Layout
+$sidebar-width: 232px;
+$topbar-height: 64px;
 
 // Breakpoints
 $bp-sm: 480px;

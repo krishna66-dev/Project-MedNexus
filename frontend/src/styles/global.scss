@@ -3,6 +3,8 @@
 
 * { box-sizing: border-box; }
 
+html { scroll-behavior: smooth; }
+
 html, body {
   margin: 0;
   padding: 0;
@@ -14,68 +16,81 @@ html, body {
 
 #app { min-height: 100vh; display: flex; flex-direction: column; }
 
-h1, h2, h3, h4 { font-family: v.$font-family-base; color: v.$color-navy-dark; margin: 0 0 v.$space-3; }
+h1, h2, h3, h4 { font-family: v.$font-family-base; color: v.$color-navy-text; margin: 0 0 v.$space-3; line-height: 1.25; }
 p { line-height: 1.6; }
-a { color: v.$color-blue; text-decoration: none; &:hover { text-decoration: underline; } }
+a { color: v.$color-blue-link; text-decoration: none; &:hover { text-decoration: underline; } }
 
-.tricolour-strip { @include m.tricolour-strip; }
-
+// ---------- Buttons ----------
 .btn {
   @include m.btn-base;
   @include m.focus-ring;
 }
 .btn-primary {
   @extend .btn;
-  background: v.$color-navy;
+  background: v.$color-teal;
   color: v.$color-white;
-  &:hover:not(:disabled) { background: v.$color-navy-dark; }
+  box-shadow: 0 6px 14px rgba(15, 124, 128, 0.22);
+  &:hover:not(:disabled) { background: v.$color-teal-dark; }
 }
-.btn-saffron {
+.btn-green {
   @extend .btn;
-  background: v.$color-saffron;
-  color: v.$color-navy-dark;
-  &:hover:not(:disabled) { background: v.$color-saffron-dark; }
+  background: v.$color-green;
+  color: v.$color-white;
+  box-shadow: 0 6px 14px rgba(14, 159, 110, 0.25);
+  &:hover:not(:disabled) { background: v.$color-green-dark; }
+}
+// Legacy class name kept so existing markup/classes keep working
+.btn-saffron {
+  @extend .btn-green;
 }
 .btn-outline {
   @extend .btn;
-  background: transparent;
-  color: v.$color-navy;
-  border: 1.5px solid v.$color-navy;
-  &:hover:not(:disabled) { background: v.$color-blue-light; }
+  background: v.$color-white;
+  color: v.$color-navy-text;
+  border-color: v.$color-border-strong;
+  &:hover:not(:disabled) { background: v.$color-bg-soft; border-color: v.$color-teal; }
 }
 .btn-danger {
   @extend .btn;
   background: v.$color-severity-red;
   color: v.$color-white;
-  &:hover:not(:disabled) { background: darken(v.$color-severity-red, 8%); }
+  &:hover:not(:disabled) { background: #b32424; }
 }
 
+// ---------- Cards & forms ----------
 .card { @include m.card; padding: v.$space-5; }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: v.$space-1;
+  gap: 6px;
   margin-bottom: v.$space-4;
 
   label {
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     font-weight: 600;
-    color: v.$color-text-muted;
+    color: v.$color-navy-text;
+    .req { color: v.$color-severity-red; margin-left: 2px; }
+    .opt { color: v.$color-text-muted; font-weight: 500; }
   }
 
   input, select, textarea {
     @include m.focus-ring;
     font-family: v.$font-family-base;
-    font-size: 1rem;
-    padding: 10px 12px;
+    font-size: 0.95rem;
+    padding: 11px 14px;
     border: 1.5px solid v.$color-border;
-    border-radius: v.$radius-sm;
+    border-radius: v.$radius-md;
     background: v.$color-white;
     color: v.$color-text;
+    width: 100%;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
-    &:focus { border-color: v.$color-blue; }
+    &::placeholder { color: v.$color-placeholder; }
+    &:focus { border-color: v.$color-teal; box-shadow: 0 0 0 3px rgba(15, 124, 128, 0.12); }
+    &:read-only:not(select) { background: v.$color-bg-soft; color: v.$color-text-muted; }
   }
+  textarea { resize: vertical; min-height: 96px; }
 
   .hint { font-size: 0.78rem; color: v.$color-text-muted; }
   .error { font-size: 0.8rem; color: v.$color-severity-red; font-weight: 600; }
@@ -95,40 +110,43 @@ a { color: v.$color-blue; text-decoration: none; &:hover { text-decoration: unde
   @media (max-width: v.$bp-sm) { grid-template-columns: 1fr; }
 }
 
+// ---------- Badges ----------
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   padding: 5px 12px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  border-radius: v.$radius-pill;
+  letter-spacing: 0.01em;
 }
-.badge-green  { background: rgba(30,142,62,.12);  color: v.$color-severity-green; }
-.badge-yellow { background: rgba(242,169,0,.15);  color: darken(v.$color-severity-yellow, 15%); }
-.badge-orange { background: rgba(232,89,12,.13);  color: v.$color-severity-orange; }
-.badge-red    { background: rgba(211,47,47,.13);  color: v.$color-severity-red; }
+.badge-green  { background: v.$color-sev-green-bg;  color: v.$color-severity-green; }
+.badge-yellow { background: v.$color-sev-yellow-bg; color: #A86F00; }
+.badge-orange { background: v.$color-sev-orange-bg; color: v.$color-severity-orange; }
+.badge-red    { background: v.$color-sev-red-bg;    color: v.$color-severity-red; }
 
 .container { @include m.container; }
 
 .disclaimer {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: v.$color-text-muted;
-  background: v.$color-blue-light;
-  border-left: 4px solid v.$color-blue;
+  background: v.$color-teal-light;
+  border-left: 4px solid v.$color-teal;
   padding: v.$space-3 v.$space-4;
   border-radius: v.$radius-sm;
 }
 
-.gov-emblem-note {
-  font-size: 0.72rem;
-  color: v.$color-text-muted;
-  letter-spacing: 0.02em;
+.alert-error {
+  background: v.$color-sev-red-bg;
+  color: v.$color-severity-red;
+  padding: v.$space-3 v.$space-4;
+  border-radius: v.$radius-md;
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
-::selection { background: rgba(11,78,162,.2); }
+::selection { background: rgba(15, 124, 128, 0.2); }
 
 .skip-link {
   position: absolute;
@@ -139,4 +157,18 @@ a { color: v.$color-blue; text-decoration: none; &:hover { text-decoration: unde
   padding: 8px 16px;
   z-index: 999;
   &:focus { left: 8px; top: 8px; }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}
+
+// ---------- Print (Result → Print Report) ----------
+@media print {
+  .no-print { display: none !important; }
+  html, body { background: #fff !important; }
 }

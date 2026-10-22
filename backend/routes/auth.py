@@ -31,6 +31,9 @@ def register():
     role = data.get("role", "self")
     region = (data.get("region") or "").strip() or None
     phone = (data.get("phone") or "").strip() or None
+    gender = (data.get("gender") or "").strip().lower() or None
+    if gender not in (None, "male", "female", "other"):
+        gender = None
     preferred_language = data.get("preferred_language", "en")
 
     errors = {}
@@ -78,6 +81,7 @@ def register():
             name=name,
             dob=dob,
             age=age,
+            gender=gender,
         )
         db.session.add(self_patient)
 

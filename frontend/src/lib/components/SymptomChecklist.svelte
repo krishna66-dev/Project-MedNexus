@@ -1,6 +1,7 @@
 <script lang="ts">
   import { t } from "../i18n";
   import { SYMPTOM_CODES, type SymptomCode } from "../types";
+  import Icon from "./art/Icon.svelte";
 
   export let selected: SymptomCode[] = [];
 
@@ -31,6 +32,9 @@
         checked={selected.includes(code)}
         on:change={() => toggle(code)}
       />
+      <span class="tick" aria-hidden="true">
+        {#if selected.includes(code)}<Icon name="check" size={13} strokeWidth={3} />{/if}
+      </span>
       {$t.symptoms[code]}
     </label>
   {/each}
@@ -40,36 +44,55 @@
   @use "../../styles/variables" as v;
 
   .symptom-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: v.$space-2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: v.$space-2 v.$space-3;
+    @media (max-width: v.$bp-sm) { grid-template-columns: 1fr; }
   }
   .symptom-pill {
-    display: inline-flex;
+    position: relative;
+    display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
     border: 1.5px solid v.$color-border;
-    border-radius: 999px;
-    padding: 7px 14px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    border-radius: v.$radius-md;
+    padding: 11px 14px;
+    font-size: 0.88rem;
+    font-weight: 500;
     cursor: pointer;
     background: v.$color-white;
     color: v.$color-text;
     transition: all 0.12s ease;
 
-    input { accent-color: v.$color-navy; }
+    input { position: absolute; opacity: 0; pointer-events: none; }
 
-    &:hover { border-color: v.$color-blue; }
+    .tick {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 1.5px solid v.$color-border-strong;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+      background: v.$color-white;
+    }
+
+    &:hover { border-color: v.$color-teal; }
+    input:focus-visible ~ .tick { outline: 3px solid rgba(15, 124, 128, 0.35); outline-offset: 2px; }
+
     &.checked {
-      background: v.$color-blue-light;
-      border-color: v.$color-blue;
-      color: v.$color-navy-dark;
+      background: v.$color-teal-light;
+      border-color: v.$color-teal;
+      color: v.$color-navy-text;
+      .tick { background: v.$color-teal; border-color: v.$color-teal; }
     }
     &.redflag.checked {
-      background: rgba(211,47,47,.1);
+      background: v.$color-sev-red-bg;
       border-color: v.$color-severity-red;
       color: v.$color-severity-red;
+      .tick { background: v.$color-severity-red; border-color: v.$color-severity-red; }
     }
   }
 </style>
